@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hiveLearn/boxes/boxes.dart';
+import 'package:hiveLearn/models/notes_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,6 +10,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final titleController = TextEditingController();
+  final descController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,57 +19,70 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Hive Database"),
       ),
       body: Column(
-        children: [
-          FutureBuilder(
-              future: Hive.openBox('asif'),
-              builder: (context, snapshot) {
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(snapshot.data?.get('name').toString() ?? ''),
-                      subtitle:
-                          Text(snapshot.data?.get('age').toString() ?? ''),
-                      trailing: IconButton(
-                        onPressed: () {
-                          snapshot.data!.put('name', 'Anup Upadhaya');
-                          snapshot.data!.put('age', '40');
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.edit),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-          // FutureBuilder(
-          //     future: Hive.openBox('name'),
-          //     builder: (context, snapshot) {
-          //       return Column(
-          //         children: [
-          //           ListTile(
-          //             title:
-          //                 Text(snapshot.data?.get('youtube').toString() ?? ''),
-          //           ),
-          //         ],
-          //       );
-          //     }),
-        ],
+        children: const [],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          var box = await Hive.openBox("asif");
-          var box2 = await Hive.openBox("name");
-          box2.put('youtube', 'Anup Tech');
-          box.put('name', 'asif taj');
-          box.put('age', '25');
-          box.put('details', {'pro': 'developer', 'kash': 'assd'});
-          print(box.get('name'));
-          print(box.get('age'));
-          print(box2.get('youtube'));
-          print(box.get('details')['pro']);
+          _showMyDialog();
         },
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _showMyDialog() async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Add Notes"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                        hintText: "Enter Title", border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                        hintText: "Enter description",
+                        border: OutlineInputBorder()),
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final data = NotesModel(
+                      title: titleController.text,
+                      description: descController.text);
+                  final box = Boxes.getData();
+                  box.add(data);
+
+                  data.save();
+
+                  print(box);
+                  titleController.clear();
+                  descController.clear();
+
+                  Navigator.pop(context);
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        });
   }
 }
