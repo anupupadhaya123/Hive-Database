@@ -34,7 +34,34 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(data[index].title.toString()),
+                        Row(
+                          children: [
+                            Text(data[index].title.toString()),
+                            const Spacer(),
+                            InkWell(
+                                onTap: () {
+                                  _editDialog(
+                                      data[index],
+                                      data[index].title.toString(),
+                                      data[index].description.toString());
+                                },
+                                child: const Icon(Icons.edit)),
+                            const SizedBox(
+                              width: 15,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                delete(data[index]);
+                                descController.clear();
+                                titleController.clear();
+                              },
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
                         Text(data[index].description.toString()),
                       ],
                     ),
@@ -106,5 +133,61 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
         });
+  }
+
+  Future<void> _editDialog(
+      NotesModel notesModel, String title, String description) async {
+    titleController.text = title;
+    descController.text = description;
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Edit Notes"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                        hintText: "Enter Title", border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                        hintText: "Enter description",
+                        border: OutlineInputBorder()),
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  notesModel.title = titleController.text.toString();
+                  notesModel.description = descController.text.toString();
+                  await notesModel.save();
+                  descController.clear();
+                  titleController.clear();
+                  Navigator.pop(context);
+                },
+                child: const Text('Edit'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void delete(NotesModel notesModel) async {
+    await notesModel.delete();
   }
 }
